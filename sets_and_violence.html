@@ -1,0 +1,175 @@
+Sets and Violence
+
+A Javascript Hangman implementation in the Functional Core, Imperative Shell paradigm
+
+Hangman is a popular game for teaching programming fundamentals - it's simple, has only a small number of variables easy to understand. This simplicity also makes it a great project to explore different programming styles. 
+
+For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see this talk, for an explanation), which aims to marry the reliability and isolation offered by functional programming with the more 'real world' approach offered by an imperative and Object-Oriented approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:
+
+The functional core refers to a number of classes that have immutable state.
+
+The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations.
+
+Hangman is well suited to this paradigm because of its internal simplicity. 
+
+The rules are this - An unknown word is selected by our antagonist and we must identify the word by guessing letters. The word is represented by spaces for unknown letters, and every time we guess a correct letter, it is added into the corresponding space (or spaces, if it occurs multiple times). Of course, every time we guess incorrectly, we get one step closer to the scaffold.
+
+Thinking about this programmatically, we can see that the state of the game at any time can be represented through the use of a limited number of variables and operations on these variables.
+
+ - At the start of the game we choose a word, which can be a string, essentially an ordered list of letters.
+
+ - We also have a number of lives, which are reduced by each incorrect guess. 
+
+ - The final variable is the only one that actually varies - the letters we have guessed so far. 
+
+ - The game has three possible states - Victory (all letters guessed), Death (no more lives left) or Still Playing. The important thing is that all of these can be figured out using the above three values - the word to be guessed, the lives, or number of guesses the player is allowed, and the letters that the player has guessed.
+
+It's worth emphasising that the lives, or maximum number of wrong guesses, and the word are set at the start of the game. The only thing that changes throughout the course of a game is the guessed letters, and everything else follows on from that.
+
+So, let's think about some more variables.
+
+The correct guesses are the letters in the guesses that are also contained in the word. If we have a set of guessed letters and a set of the word's letters, the correct guesses are the intersection of these sets.
+
+Similarly, the incorrect guesses are the guessed letters that are not contained in the word. So they are the difference of these sets.
+
+If the number of incorrect guesses is the same as the number of lives, then the player is dead. If the number of correct guesses is the same as the number of letters in the word, then the word must be completely guessed, and the player has won! :-)
+
+Javascript has some lovely new set objects, so we can use these to simplify our code. First we need some intersection and difference utility methods. 
+
+<codeblock>
+    var intersection = function(setA, setB){
+	return new Set([x for (x of setA) if (setB.has(x))]);
+    }
+    
+    var difference = function(setA, setB){
+	return new Set([x for (x of setA) if (!setB.has(x))]);
+    }
+</codeblock>
+These methods are also using the lovely new (and very Pythonic!) list comprehensions. If you want to learn more about the Javascript Set object, check the docs here.
+
+Ok, so with these, we can define our Game class. This will reflect the state of our game (this is probably not best Javascript OOP practice).
+
+<codeblock>
+    var Game = function(lives, word, guesses){	
+	this.lives = lives;
+	this.word = word;
+	this.guesses = guesses;
+	this.word_letters = new Set(this.word);
+	this.correct_guesses = intersection(this.guesses, this.word_letters);
+	this.incorrect_guesses = difference(this.guesses, this.word_letters);	
+	this.is_dead = this.lives <= this.incorrect_guesses.size;
+	this.has_won = this.correct_guesses.size == (this.word_letters.size);
+        
+        this.addGuess = function(letter){
+	    return Game(this.lives, this.word,
+			this.guesses.add(letter));
+	}
+	return this;	
+    }
+</codeblock>
+As mentioned above, the Game class is initiated with three variables - lives, words and guesses, with all the subsequent variables derived from these. 
+
+So that's the Functional Core of the application, or at least one part of it. The Imperative Shell will handle the actual creation and manipulation of the game object. Here's a snippet from our interface module:
+
+<codeblock>
+  var lives = 5;
+  var words = ['munificent','antelope','interlude', 
+  'television', 'moribund', 'pabulum'];
+  var word = chooseWord(words);
+  var guesses = new Set([]);
+  var game_obj = game.Game(lives, word, guesses);
+</codeblock> 
+
+That's the Game object instantiated on page load, but we also need a way to update it as we get new guesses in. So we'll create a function to handle input and bind it to the keypress.
+
+<codeblock>
+  $(document).keypress(function(e){
+    handleInput(e);
+  });
+  var handleInput = function(e){
+      if (!isLetter(e.key) || (game_obj.guesses.has(e.key))){
+	  return;
+      }
+      game_obj = game_obj.addGuess(e.key);
+      scr = screen.Screen(game_obj);
+      drawScreen(scr);		
+  }
+</codeblock>
+
+So this function handleInput performs some simple validation (the above is just a regex) and, if the key pressed is a letter, calls our Game object's addGuess function. If we look at this function again, we see that it doesn't mutate state, it just returns a brand new Game object with the new letter added to the guesses.
+
+<codeblock>
+  this.addGuess = function(letter){
+      return Game(this.lives, this.word,
+		  this.guesses.add(letter));
+  }
+</codeblock>
+
+So that's it for our Game object! Easy! Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this game to the user. 
+
+We'll do this with a Screen object, written in the same style as the Game object. This will have a few variables, a message to display to the user, the word (with dashes for unguessed letters), a gallows that is added to as they guess wrong, and the wrong guesses. All of these variables will be simple strings that can be squirted out into our html each time the player makes another guess.
+ 
+<codeblock>
+    var Screen = function(game){	
+	this.msg = getMsg(game);
+	this.word = getWord(game);
+    	this.gallows = gallows.stages[game.incorrect_guesses.size];
+	this.wrong_guesses = [...game.incorrect_guesses].join(' ');
+
+	return this;
+    }    
+</codeblock>
+The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. The most complex of these is getWord, which splits the word into an array of letters (e.g., 'antelope' -> ['a','n','t','e','l','o','p','e']) and returns an underscore if the letter is not guessed, the letter itself if it is.
+
+<codeblock>
+    var getWord = function(game){
+	var getLetter= function(letter){
+	    return (game.guesses.has(letter) ? letter : "_");
+	}
+	var display_letters = game.word.split('').map(getLetter);
+	return display_letters.join(' ');
+    }
+</codeblock>
+
+And that's the Screen object. Handling this will just involve adding the relevant bits of the Screen object into our html. Our drawScreen method will live in and be called from the interface module.  
+
+<codeblock>
+    var drawScreen = function(screen){
+	$('#game-message').html(screen.msg);
+	$('#gallows').html(screen.gallows);
+	$('#display-word').html(screen.word);	
+	$('#guesses').html(screen.wrong_guesses);
+    };
+</codeblock>
+
+Remember, this interface module is the 'imperative shell', or management layer of our application. It's worth looking at the core init method from a high-level.
+
+<codeblock>
+var init = function(){
+	var lives = 5;
+	var words = ['munificent','antelope','interlude', 
+		     'television', 'moribund', 'pabulum'];
+	var word = chooseWord(words);
+        var guesses = new Set([]);
+	var game_obj = game.Game(lives, word, guesses);
+	var scr = screen.Screen(game_obj);
+	drawScreen(scr);
+	$(document).keypress(function(e){
+	    handleInput(e);
+        });
+	var handleInput = function(e){
+	    if (!isLetter(e.key) || (game_obj.guesses.has(e.key))){
+		return;
+	    }
+            if (game_obj.is_dead || game_obj.has_won){
+		return;
+	    }
+	    game_obj = game_obj.addGuess(e.key);
+	    scr = screen.Screen(game_obj);
+	    drawScreen(scr);		
+	}
+    }
+</codeblock>
+This module is the overall manager of the sub-classes. It instantiates our Game object and passes that be composed as a Screen object, which is then drawn to the page. We then wait for user input and repeat the process until the user wins or is dead
+
+So that's it for our Hangman game! It's a simple game, but I hope I've shown how approaching things through this 'Functional Core, Imperative Shell' methodology can help you write clean and clear code.
