@@ -1,175 +1,323 @@
-Sets and Violence
+<!DOCTYPE html>
+<html lang="en">
 
-A Javascript Hangman implementation in the Functional Core, Imperative Shell paradigm
+  <head>
 
-Hangman is a popular game for teaching programming fundamentals - it's simple, has only a small number of variables easy to understand. This simplicity also makes it a great project to explore different programming styles. 
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
-For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see this talk, for an explanation), which aims to marry the reliability and isolation offered by functional programming with the more 'real world' approach offered by an imperative and Object-Oriented approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:
+    <title>Sets and Violence - A Javascript hangman game</title>
 
-The functional core refers to a number of classes that have immutable state.
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
 
-The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations.
+    <!-- Custom CSS -->
+    <link href="css/clean-blog.css" rel="stylesheet">
 
-Hangman is well suited to this paradigm because of its internal simplicity. 
+    <!-- Custom Fonts -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="css/prism.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <script src="js/prism.js"></script>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+	<![endif]-->
 
-The rules are this - An unknown word is selected by our antagonist and we must identify the word by guessing letters. The word is represented by spaces for unknown letters, and every time we guess a correct letter, it is added into the corresponding space (or spaces, if it occurs multiple times). Of course, every time we guess incorrectly, we get one step closer to the scaffold.
+  </head>
 
-Thinking about this programmatically, we can see that the state of the game at any time can be represented through the use of a limited number of variables and operations on these variables.
+  <body>
 
- - At the start of the game we choose a word, which can be a string, essentially an ordered list of letters.
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header page-scroll">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">Start Bootstrap</a>
+        </div>
 
- - We also have a number of lives, which are reduced by each incorrect guess. 
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+              <a href="index.html">Home</a>
+            </li>
+            <li>
+              <a href="about.html">About</a>
+            </li>
+            <li>
+              <a href="post.html">Sample Post</a>
+            </li>
+            <li>
+              <a href="contact.html">Contact</a>
+            </li>
+          </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+      </div>
+      <!-- /.container -->
+    </nav>
 
- - The final variable is the only one that actually varies - the letters we have guessed so far. 
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header class="intro-header" style="background-image: url('img/gallows_rect.jpg')">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <div class="post-heading">
+              <h1>Sets and Violence</h1>
+              <h2 class="subheading">A Javascript Hangman Game</h2>
+              <span class="meta">Posted by <a href="#">Dara McHugh</a> on Februrary 20th, 2016</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
 
- - The game has three possible states - Victory (all letters guessed), Death (no more lives left) or Still Playing. The important thing is that all of these can be figured out using the above three values - the word to be guessed, the lives, or number of guesses the player is allowed, and the letters that the player has guessed.
+    <!-- Post Content -->
+    <article>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <p>Hangman is a popular game for teaching programming fundamentals - it's simple, has only a small number of variables easy to understand. This simplicity also makes it a good way to explore different programming styles.</p>
 
-It's worth emphasising that the lives, or maximum number of wrong guesses, and the word are set at the start of the game. The only thing that changes throughout the course of a game is the guessed letters, and everything else follows on from that.
+            <p>For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see <a href="https://www.destroyallsoftware.com/talks/boundaries">this talk</a> for an explanation), which aims to marry the reliability and isolation offered by functional programming with the more 'real world' flexibility offered by an imperative approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:</p>
+	    <ul>
+	      <li>The functional core refers to a number of classes that have immutable state.</li>
+	      <li>The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations.</li>
+	    </ul>
+            <p>Hangman is a simple game that we can design along this paradigm.</p>
+	    <h2>Rules of the Game</h2>
+	    <img src="img/hangman-game-5.png">
+            <p>The rules of hangman are this - We have to guess a word by guessing individual letters. We have a set number of lives and lose a life each time we make a wrong guess.</p>
+	    <p>It's a pen and paper game, where the unknown word is displayed as dashes, with letters fill in as we guess them. A sketch of the scaffold is added to each time there's a wrong guess. If the sketch is completed before we complete the game, then we lose!</p>
 
-So, let's think about some more variables.
+            <p>Thinking about this programmatically, we can see that the state of the game at any time can be represented through the use of a limited number of variables and operations on these variables.</p>
 
-The correct guesses are the letters in the guesses that are also contained in the word. If we have a set of guessed letters and a set of the word's letters, the correct guesses are the intersection of these sets.
+	    <ul>
+	      <li>At the start of the game we choose a <strong>word</strong>, which can be a string, which is essentially an ordered list of letters.</li>
+	      <li>We also have a number of <strong>lives</strong>, which is a total number of wrong guesses we are allowed.</li>
+	      <li>Finally we have our <strong>guesses</strong>, the letters that we have guessed so far.</li>
+	      <li>The game has three possible states - Victory (all letters guessed), Death (no more lives left) or Still Playing. All of these can be figured out using the above three variables.</li>
+	    </ul>
+	    <p> It's worth emphasising that the lives, or maximum number of wrong guesses, and the word are set at the start of the game. The only thing that changes throughout the course of a game is the guessed letters, and everything else follows on from that.</p>             
 
-Similarly, the incorrect guesses are the guessed letters that are not contained in the word. So they are the difference of these sets.
+<p>So, let's think about some more variables.</p>
 
-If the number of incorrect guesses is the same as the number of lives, then the player is dead. If the number of correct guesses is the same as the number of letters in the word, then the word must be completely guessed, and the player has won! :-)
+<ul><li>The <strong>correct guesses</strong> are the letters in the guesses that are also contained in the word. If we have a set of guessed letters and a set of the word's letters, the correct guesses are the <em>intersection</em> of these sets.</li>
 
-Javascript has some lovely new set objects, so we can use these to simplify our code. First we need some intersection and difference utility methods. 
+<li>Similarly, the <strong>incorrect guesses</strong> are the guessed letters that are not contained in the word. So they are the <em>difference</em> of these sets.</li></ul>
 
-<codeblock>
+<h2>Putting it into practice</h2>
+
+<p>The game state can be worked out on the basis of the above. If the number of incorrect guesses is the same as the number of lives, then the player is dead. If the number of correct guesses is the same as the number of letters in the word, then the word must be completely guessed, and the player has won! :-)</p>
+
+<p>Javascript has some lovely new set objects, so we can use these to simplify our code. First we need some intersection and difference utility methods. </p>
+
+<pre><code class="language-javascript">
     var intersection = function(setA, setB){
-	return new Set([x for (x of setA) if (setB.has(x))]);
+	    return new Set([x for (x of setA) if (setB.has(x))]);
     }
     
     var difference = function(setA, setB){
-	return new Set([x for (x of setA) if (!setB.has(x))]);
+	    return new Set([x for (x of setA) if (!setB.has(x))]);
     }
-</codeblock>
-These methods are also using the lovely new (and very Pythonic!) list comprehensions. If you want to learn more about the Javascript Set object, check the docs here.
+</code></pre>
+<p>These methods are also using the lovely (and very Pythonic!) <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Array_comprehensions">list comprehensions</a>. If you want to learn more about the Javascript Set object, check the docs <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Set">here</a>.</p>
 
-Ok, so with these, we can define our Game class. This will reflect the state of our game (this is probably not best Javascript OOP practice).
+<p>We're now ready to define our Game class. This will reflect the state of our game (this is probably not best Javascript OOP practice).</p>
 
-<codeblock>
+<pre><code class="language-javascript">
     var Game = function(lives, word, guesses){	
-	this.lives = lives;
-	this.word = word;
-	this.guesses = guesses;
-	this.word_letters = new Set(this.word);
-	this.correct_guesses = intersection(this.guesses, this.word_letters);
-	this.incorrect_guesses = difference(this.guesses, this.word_letters);	
-	this.is_dead = this.lives <= this.incorrect_guesses.size;
-	this.has_won = this.correct_guesses.size == (this.word_letters.size);
+	    this.lives = lives;
+	    this.word = word;
+	    this.guesses = guesses;
+	    this.word_letters = new Set(this.word);
+	    this.correct_guesses = intersection(this.guesses, this.word_letters);
+	    this.incorrect_guesses = difference(this.guesses, this.word_letters);	
+	    this.is_dead = this.lives <= this.incorrect_guesses.size;
+	    this.has_won = this.correct_guesses.size == (this.word_letters.size);
         
-        this.addGuess = function(letter){
-	    return Game(this.lives, this.word,
-			this.guesses.add(letter));
-	}
-	return this;	
+	    this.addGuess = function(letter){
+	        return Game(this.lives, this.word,
+			    this.guesses.add(letter));
+	    }
+	    return this;	
     }
-</codeblock>
-As mentioned above, the Game class is initiated with three variables - lives, words and guesses, with all the subsequent variables derived from these. 
+</code></pre>
+<p>The Game object is initiated with three variables - lives, words and guesses, with all the subsequent variables derived from these. Also worth noting is the addGuess function. In a more typical OOP approach, we might expect this to be a 'setter', i.e., a method that would modify the internal values of the object. For instance, we might write something like this:</p>
+<pre><code class="language-javascript">
+	    this.addGuess = function(letter){	        
+	        this.guesses.add(letter));
+	    }
+</pre></code>
+<p>This modification of internal values would then mean that the other key variables would also need to be accessed via methods rather than as values, for instance, we might have getCorrectGuesses, which computes and returns the correct guesses each time it is run. </p>
 
-So that's the Functional Core of the application, or at least one part of it. The Imperative Shell will handle the actual creation and manipulation of the game object. Here's a snippet from our interface module:
+<p>Instead, with the functional core style, when we add a guess, we return a whole new game object with the letter added to the guesses. The lives and the word stay the same, and the other dependent variables are automatically calculated.</p>
+<p>Let's take a quick look at how this will work in practice. Here's a snippet from our interface module:</p>
 
-<codeblock>
+<pre><code class="language-javascript">
   var lives = 5;
   var words = ['munificent','antelope','interlude', 
   'television', 'moribund', 'pabulum'];
   var word = chooseWord(words);
   var guesses = new Set([]);
   var game_obj = game.Game(lives, word, guesses);
-</codeblock> 
+</code></pre> 
 
-That's the Game object instantiated on page load, but we also need a way to update it as we get new guesses in. So we'll create a function to handle input and bind it to the keypress.
+<p>That's the Game object instantiated on page load with a fixed number of lives, a word, and an empty set of guesses. We also need a way to update it as we get new guesses in. So we'll create a function to handle input and bind it to the keypress.</p>
 
-<codeblock>
+<pre><code class="language-javascript">
   $(document).keypress(function(e){
-    handleInput(e);
+      handleInput(e);
   });
   var handleInput = function(e){
       if (!isLetter(e.key) || (game_obj.guesses.has(e.key))){
-	  return;
+          return;
       }
       game_obj = game_obj.addGuess(e.key);
       scr = screen.Screen(game_obj);
       drawScreen(scr);		
   }
-</codeblock>
+</code></pre>
 
-So this function handleInput performs some simple validation (the above is just a regex) and, if the key pressed is a letter, calls our Game object's addGuess function. If we look at this function again, we see that it doesn't mutate state, it just returns a brand new Game object with the new letter added to the guesses.
+<p>Our handleInput function performs some simple validation and uses the addGuess function, which of course returns a whole new Game object.</p>
+<p>So that's it for our Game object! Easy! Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this game to the user. </p>
 
-<codeblock>
-  this.addGuess = function(letter){
-      return Game(this.lives, this.word,
-		  this.guesses.add(letter));
-  }
-</codeblock>
-
-So that's it for our Game object! Easy! Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this game to the user. 
-
-We'll do this with a Screen object, written in the same style as the Game object. This will have a few variables, a message to display to the user, the word (with dashes for unguessed letters), a gallows that is added to as they guess wrong, and the wrong guesses. All of these variables will be simple strings that can be squirted out into our html each time the player makes another guess.
+<p>We'll do this with a Screen object, written in the same style as the Game object. This will have a few variables, a message to display to the user, the word (with dashes for unguessed letters), a gallows that is added to as they guess wrong, and the wrong guesses. All of these variables will be simple strings - ready to be squirted out into our html.</p>
  
-<codeblock>
+<pre><code class="language-javascript">
     var Screen = function(game){	
-	this.msg = getMsg(game);
-	this.word = getWord(game);
-    	this.gallows = gallows.stages[game.incorrect_guesses.size];
-	this.wrong_guesses = [...game.incorrect_guesses].join(' ');
+        
+        this.msg = getMsg(game);
+        this.word = getWord(game);
+        this.gallows = gallows.stages[game.incorrect_guesses.size];
+        this.wrong_guesses = [...game.incorrect_guesses].join(' ');
 
-	return this;
+        return this;
     }    
-</codeblock>
-The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. The most complex of these is getWord, which splits the word into an array of letters (e.g., 'antelope' -> ['a','n','t','e','l','o','p','e']) and returns an underscore if the letter is not guessed, the letter itself if it is.
+</code></pre>
+<p>The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. The most complex of these is <strong>getWord</strong>, which splits the word into an array of letters (e.g., <em>'antelope'</em> <strong>-></strong> <em>['a', 'n', 't', 'e', 'l', 'o', 'p', 'e']</em>) and returns an underscore if the letter is not guessed, the letter itself if it is.</p>
 
-<codeblock>
+<pre><code class="language-javascript">
     var getWord = function(game){
-	var getLetter= function(letter){
-	    return (game.guesses.has(letter) ? letter : "_");
-	}
-	var display_letters = game.word.split('').map(getLetter);
-	return display_letters.join(' ');
+	    var getLetter= function(letter){
+	        return (game.guesses.has(letter) ? letter : "_");
+	    }
+	    var display_letters = game.word.split('').map(getLetter);
+	    return display_letters.join(' ');
     }
-</codeblock>
+</code></pre>
 
-And that's the Screen object. Handling this will just involve adding the relevant bits of the Screen object into our html. Our drawScreen method will live in and be called from the interface module.  
+<p>And that's the Screen object. Handling this will just involve adding the relevant bits of the Screen object into our html. Our drawScreen method will live in and be called from the interface module.</p>
 
-<codeblock>
+<pre><code class="language-javascript">
     var drawScreen = function(screen){
-	$('#game-message').html(screen.msg);
-	$('#gallows').html(screen.gallows);
-	$('#display-word').html(screen.word);	
-	$('#guesses').html(screen.wrong_guesses);
+	    $('#game-message').html(screen.msg);
+	    $('#gallows').html(screen.gallows);
+	    $('#display-word').html(screen.word);	
+	    $('#guesses').html(screen.wrong_guesses);
     };
-</codeblock>
+</code></pre>
 
-Remember, this interface module is the 'imperative shell', or management layer of our application. It's worth looking at the core init method from a high-level.
+<p>Remember, this interface module is the 'imperative shell', or management layer of our application. It's worth looking at the core init method from a high-level.</p>
 
-<codeblock>
-var init = function(){
-	var lives = 5;
-	var words = ['munificent','antelope','interlude', 
-		     'television', 'moribund', 'pabulum'];
-	var word = chooseWord(words);
+<pre><code class="language-javascript">
+    var init = function(){
+        var lives = 5;
+        var words = ['munificent','antelope','interlude', 
+	             'television', 'moribund', 'pabulum'];
+        var word = chooseWord(words);
         var guesses = new Set([]);
-	var game_obj = game.Game(lives, word, guesses);
-	var scr = screen.Screen(game_obj);
-	drawScreen(scr);
-	$(document).keypress(function(e){
-	    handleInput(e);
-        });
-	var handleInput = function(e){
-	    if (!isLetter(e.key) || (game_obj.guesses.has(e.key))){
-		return;
-	    }
+        var game_obj = game.Game(lives, word, guesses);
+        var scr = screen.Screen(game_obj);
+        drawScreen(scr);
+        $(document).keypress(function(e){
+            handleInput(e);
+            });
+        var handleInput = function(e){
+            if (!isLetter(e.key) || (game_obj.guesses.has(e.key))){
+	        return;
+            }
             if (game_obj.is_dead || game_obj.has_won){
-		return;
-	    }
-	    game_obj = game_obj.addGuess(e.key);
-	    scr = screen.Screen(game_obj);
-	    drawScreen(scr);		
-	}
+                return;
+            }
+            game_obj = game_obj.addGuess(e.key);
+            scr = screen.Screen(game_obj);
+            drawScreen(scr);		
+        }
     }
-</codeblock>
-This module is the overall manager of the sub-classes. It instantiates our Game object and passes that be composed as a Screen object, which is then drawn to the page. We then wait for user input and repeat the process until the user wins or is dead
+</code></pre>
+<p>This module is the overall manager of the sub-classes. It instantiates our Game object and passes that be composed as a Screen object, which is then drawn to the page. We then wait for user input and repeat the process until the user wins or is dead.</p>
 
-So that's it for our Hangman game! It's a simple game, but I hope I've shown how approaching things through this 'Functional Core, Imperative Shell' methodology can help you write clean and clear code.
+<p>So that's it for our Hangman game! It's a simple game, but I hope I've shown how approaching things through this 'Functional Core, Imperative Shell' methodology can help you write clean and clear code.</p>
+
+            <p>Placeholder text by <a href="http://spaceipsum.com/">Space Ipsum</a>. Photographs by <a href="https://www.flickr.com/photos/nasacommons/">NASA on The Commons</a>.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <hr>
+
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+            <ul class="list-inline text-center">
+              <li>
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a href="#">
+                  <span class="fa-stack fa-lg">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                  </span>
+                </a>
+              </li>
+            </ul>
+            <p class="copyright text-muted">Copyright &copy; Your Website 2014</p>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/clean-blog.min.js"></script>
+
+  </body>
+
+</html>
