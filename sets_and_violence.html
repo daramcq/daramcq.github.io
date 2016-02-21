@@ -93,7 +93,7 @@
           <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
             <p>Hangman is a popular game for teaching programming fundamentals - it's simple, has only a small number of variables easy to understand. This simplicity also makes it a good way to explore different programming styles.</p>
 
-            <p>For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see <a href="https://www.destroyallsoftware.com/talks/boundaries">this talk</a> for an explanation), which aims to marry the reliability and isolation offered by functional programming with the more 'real world' flexibility offered by an imperative approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:</p>
+            <p>For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see <a href="https://www.destroyallsoftware.com/talks/boundaries">this talk</a> for an explanation), which aims to marry the reliability offered by functional programming with the more 'real world' pragmatism offered by an imperative approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:</p>
 	    <ul>
 	      <li>The functional core refers to a number of classes that have immutable state.</li>
 	      <li>The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations.</li>
@@ -107,8 +107,8 @@
             <p>Thinking about this programmatically, we can see that the state of the game at any time can be represented through the use of a limited number of variables and operations on these variables.</p>
 
 	    <ul>
-	      <li>At the start of the game we choose a <strong>word</strong>, which can be a string, which is essentially an ordered list of letters.</li>
-	      <li>We also have a number of <strong>lives</strong>, which is a total number of wrong guesses we are allowed.</li>
+	      <li>At the start of the game we choose a <strong>word</strong> to be guessed.</li>
+	      <li>We also have a number of <strong>lives</strong>, which is the total number of wrong guesses we are allowed.</li>
 	      <li>Finally we have our <strong>guesses</strong>, the letters that we have guessed so far.</li>
 	      <li>The game has three possible states - Victory (all letters guessed), Death (no more lives left) or Still Playing. All of these can be figured out using the above three variables.</li>
 	    </ul>
@@ -163,15 +163,14 @@
 	        this.guesses.add(letter));
 	    }
 </pre></code>
-<p>This modification of internal values would then mean that the other key variables would also need to be accessed via methods rather than as values, for instance, we might have getCorrectGuesses, which computes and returns the correct guesses each time it is run. </p>
+<p>This modification of internal values would then mean that the other key variables would also need to be accessed via methods rather than as values, as the mutation will require dependent variables to be recalculated each time they are used. For instance, we might have <code>Game.getCorrectGuesses()</code>, which computes and returns the correct guesses each time it is run. </p>
 
 <p>Instead, with the functional core style, when we add a guess, we return a whole new game object with the letter added to the guesses. The lives and the word stay the same, and the other dependent variables are automatically calculated.</p>
 <p>Let's take a quick look at how this will work in practice. Here's a snippet from our interface module:</p>
 
 <pre><code class="language-javascript">
   var lives = 5;
-  var words = ['munificent','antelope','interlude', 
-  'television', 'moribund', 'pabulum'];
+  var words = ['munificent','antelope','interlude', 'television', 'moribund', 'pabulum'];
   var word = chooseWord(words);
   var guesses = new Set([]);
   var game_obj = game.Game(lives, word, guesses);
@@ -194,7 +193,7 @@
 </code></pre>
 
 <p>Our handleInput function performs some simple validation and uses the addGuess function, which of course returns a whole new Game object.</p>
-<p>So that's it for our Game object! Easy! Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this game to the user. </p>
+<p> Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this game to the user. </p>
 
 <p>We'll do this with a Screen object, written in the same style as the Game object. This will have a few variables, a message to display to the user, the word (with dashes for unguessed letters), a gallows that is added to as they guess wrong, and the wrong guesses. All of these variables will be simple strings - ready to be squirted out into our html.</p>
  
@@ -209,7 +208,7 @@
         return this;
     }    
 </code></pre>
-<p>The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. The most complex of these is <strong>getWord</strong>, which splits the word into an array of letters (e.g., <em>'antelope'</em> <strong>-></strong> <em>['a', 'n', 't', 'e', 'l', 'o', 'p', 'e']</em>) and returns an underscore if the letter is not guessed, the letter itself if it is.</p>
+<p>The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. <strong>getMsg</strong> simply returns a message appropriate to the state of the game, while <strong>getWord</strong> gets the word for display, by splitting it into an array of letters (e.g., <em>'antelope'</em> <strong>-></strong> <em>['a', 'n', 't', 'e', 'l', 'o', 'p', 'e']</em>) and returns an underscore if the letter is not guessed, the letter itself if it is.</p>
 
 <pre><code class="language-javascript">
     var getWord = function(game){
