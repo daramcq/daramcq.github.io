@@ -92,13 +92,14 @@
         <div class="row">
           <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
             <p>Hangman is a popular game for teaching programming fundamentals - it's simple, has only a small number of variables easy to understand. This simplicity also makes it a good way to explore different programming styles.</p>
-
+	    <img src="img/core_shell.png">
+	    <p><em>Source: <a href="https://www.destroyallsoftware.com/talks/boundaries">Destroy All Software</a></em></p>
             <p>For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see <a href="https://www.destroyallsoftware.com/talks/boundaries">this talk</a> for an explanation), which aims to marry the reliability offered by functional programming with the more 'real world' pragmatism offered by an imperative approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:</p>
 	    <ul>
-	      <li>The functional core refers to a number of classes that have immutable state.</li>
+	      <li>The functional core refers to classes that have immutable state, make decisions about objects, and have few dependencies. This is easy to test in isolation.</li>
 	      <li>The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations.</li>
 	    </ul>
-            <p>Hangman is a simple game that we can design along this paradigm.</p>
+            <p>It's well worth checking out the talk itself to get to grips with the ideas. For this article, I've written a simple browser-based Hangman game in Javascript mimicking this style as a way of exploring the implication for software design.</p>
 	    <h2>Rules of the Game</h2>
 	    <img src="img/hangman-game-5.png">
             <p>The rules of hangman are this - We have to guess a word by guessing individual letters. We have a set number of lives and lose a life each time we make a wrong guess.</p>
@@ -261,9 +262,7 @@
 </code></pre>
 <p>This module is the overall manager of the sub-classes. It instantiates our Game object and passes that be composed as a Screen object, which is then drawn to the page. We then wait for user input and repeat the process until the user wins or is dead.</p>
 
-<p>So that's it for our Hangman game! It's a simple game, but I hope I've shown how approaching things through this 'Functional Core, Imperative Shell' methodology can help you write clean and clear code.</p>
-
-            <p>Placeholder text by <a href="http://spaceipsum.com/">Space Ipsum</a>. Photographs by <a href="https://www.flickr.com/photos/nasacommons/">NASA on The Commons</a>.</p>
+<p>So that's it for our Hangman game! It's a simple game, but I hope I've shown some of the advantages of this 'Functional Core, Imperative Shell' approach.</p>
           </div>
         </div>
       </div>
