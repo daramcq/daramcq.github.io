@@ -97,10 +97,10 @@
 	    <p><em>Source: <a href="https://www.destroyallsoftware.com/talks/boundaries">Destroy All Software</a></em></p>
             <p>For those who haven't heard of it, 'Functional Core, Imperative Shell' is a programming approach mooted by Gary Bernhardt (see <a href="https://www.destroyallsoftware.com/talks/boundaries">this talk</a> for an explanation), which aims to marry the reliability offered by functional programming with the more 'real world' pragmatism offered by an imperative approach. It's well worth watching the talk (and the related videos from the Destroy All Software screencasts) to get a better understanding, but here's my take on it:</p>
 	    <ul>
-	      <li>The functional core refers to classes that have immutable state, make decisions about objects, and have few dependencies. This is easy to test in isolation.</li>
-	      <li>The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations.</li>
+	      <li>The functional core refers to classes that have immutable state, make decisions about objects, and have few dependencies. This makes them easy to test in isolation.</li>
+	      <li>The imperative shell ties all these cores together, transmitting objects as values from one to the other to perform operations. It also provides the interaction with the outside world - user input, output, database and network calls.</li>
 	    </ul>
-            <p>It's well worth checking out the talk itself to get to grips with the ideas. For this article, I've written a simple browser-based Hangman game in Javascript mimicking this style as a way of exploring the implication for software design.</p>
+            <p>It's well worth checking out <a href="https://www.destroyallsoftware.com/talks/boundaries">the talk itself</a> to get to grips with the ideas. For this article, I've written a simple, browser-based Hangman game in Javascript mimicking this style as a way of exploring how it can force us to think differently about software design.</p>
 	    <h2>Rules of the Game</h2>
 	    <img src="img/hangman-game-5.png">
             <p>The rules of hangman are this - We have to guess a word by guessing individual letters. We have a set number of lives and lose a life each time we make a wrong guess.</p>
@@ -120,26 +120,31 @@
 
 <ul><li>The <strong>correct guesses</strong> are the letters in the guesses that are also contained in the word. If we have a set of guessed letters and a set of the word's letters, the correct guesses are the <em>intersection</em> of these sets.</li>
 
-<li>Similarly, the <strong>incorrect guesses</strong> are the guessed letters that are not contained in the word. So they are the <em>difference</em> of these sets.</li></ul>
+<li>Similarly, the <strong>incorrect guesses</strong> are the guessed letters that are not contained in the word. So they are the <em>difference</em> of these sets.</li>
+<li>Game state - <strong>alive</strong>, <strong>dead</strong>, or <strong>has won</strong>. If the number of incorrect guesses is the same as the number of lives, then the player is dead. If the number of correct guesses is the same as the number of letters in the word, then the word must be completely guessed, and the player has won! :-)</li>
+</ul>
 
 <h2>Putting it into practice</h2>
 
-<p>The game state can be worked out on the basis of the above. If the number of incorrect guesses is the same as the number of lives, then the player is dead. If the number of correct guesses is the same as the number of letters in the word, then the word must be completely guessed, and the player has won! :-)</p>
+<h3> The Game</h3>
+<p>Our most important class is the Game itself, an object which will hold all the information about the state of the game - what the word is, what our right and wrong guesses are, and whether we are alive, dead or have won the game.</p>
 
 <p>Javascript has some lovely new set objects, so we can use these to simplify our code. First we need some intersection and difference utility methods. </p>
 
 <pre><code class="language-javascript">
     var intersection = function(setA, setB){
-	    return new Set([x for (x of setA) if (setB.has(x))]);
+        var el_in_b = (x => setB.has(x));
+        return new Set([...setA].filter(el_in_b));
     }
     
     var difference = function(setA, setB){
-	    return new Set([x for (x of setA) if (!setB.has(x))]);
+        var el_not_in_b = (x => !setB.has(x));
+        return new Set([...setA].filter(el_not_in_b));
     }
 </code></pre>
-<p>These methods are also using the lovely (and very Pythonic!) <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Array_comprehensions">list comprehensions</a>. If you want to learn more about the Javascript Set object, check the docs <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Set">here</a>.</p>
+<p>These methods combine the lovely Javascript <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions">arrow functions</a> with the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter">filter method</a>, which will take an array as an argument and return a new array composed of each element for which the arrow function evaluates True. If you want to learn more about the Javascript Set object, check the docs <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Set">here</a>.</p>
 
-<p>We're now ready to define our Game class. This will reflect the state of our game (this is probably not best Javascript OOP practice).</p>
+<p>We're now ready to define our Game class. We'll do this by defining it as a function which returns itself. Because Javascript functions are <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions">first-class objects</a>, we can use use them in much the same way as objects in more traditional OOP languages. Our Game function-object will take three parameters, and calculate five further variables that are dependent on these on instantiation.</p>
 
 <pre><code class="language-javascript">
     var Game = function(lives, word, guesses){	
@@ -150,7 +155,7 @@
 	    this.correct_guesses = intersection(this.guesses, this.word_letters);
 	    this.incorrect_guesses = difference(this.guesses, this.word_letters);	
 	    this.is_dead = this.lives <= this.incorrect_guesses.size;
-	    this.has_won = this.correct_guesses.size == (this.word_letters.size);
+	    this.has_won = this.correct_guesses.size == this.word_letters.size;
         
 	    this.addGuess = function(letter){
 	        return Game(this.lives, this.word,
@@ -159,7 +164,7 @@
 	    return this;	
     }
 </code></pre>
-<p>The Game object is initiated with three variables - lives, words and guesses, with all the subsequent variables derived from these. Also worth noting is the addGuess function. In a more typical OOP approach, we might expect this to be a 'setter', i.e., a method that would modify the internal values of the object. For instance, we might write something like this:</p>
+<p>Also worth noting is the addGuess function. In a more typical OOP approach, we might expect this to be a 'setter', i.e., a method that would modify the internal values of the object. For instance, we might write something like this:</p>
 <pre><code class="language-javascript">
 	    this.addGuess = function(letter){	        
 	        this.guesses.add(letter));
@@ -167,7 +172,7 @@
 </pre></code>
 <p>This modification of internal values would then mean that the other key variables would also need to be accessed via methods rather than as values, as the mutation will require dependent variables to be recalculated each time they are used. For instance, we might have <code>Game.getCorrectGuesses()</code>, which computes and returns the correct guesses each time it is run. </p>
 
-<p>Instead, with the functional core style, when we add a guess, we return a whole new game object with the letter added to the guesses. The lives and the word stay the same, and the other dependent variables are automatically calculated.</p>
+<p>Instead, with the functional core style, when we add a guess, we return a whole new game object with the letter added to the guesses. The lives and the word stay the same, and the other dependent variables are automatically calculated. So <code>Game.has_won</code>, <code>Game.is_dead</code>, etc. are static variables - they are facts about the state of the game object, not methods that check this state.</p>
 <p>Let's take a quick look at how this will work in practice. Here's a snippet from our interface module:</p>
 
 <pre><code class="language-javascript">
@@ -194,10 +199,17 @@
   }
 </code></pre>
 
-<p>Our handleInput function performs some simple validation and uses the addGuess function, which of course returns a whole new Game object.</p>
-<p> Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this game to the user. </p>
+<p>Our <code>handleInput</code> function performs some simple validation and uses the <code>Game.addGuess</code> function, which of course returns a whole new Game object with an updated set of guesses.</p>
+<p> Now that we know how to keep track of the game, the other big thing we have to worry about is displaying this to the user. </p>
 
-<p>We'll do this with a Screen object, written in the same style as the Game object. This will have a few variables, a message to display to the user, the word (with dashes for unguessed letters), a gallows that is added to as they guess wrong, and the wrong guesses. All of these variables will be simple strings - ready to be squirted out into our html.</p>
+<h3>The Screen</h3>
+<p>Since we'll be browser-based, all we really need are some strings to display to the user. At the minimum, a Hangman game needs:</p>
+<ul><li>The target <strong>word</strong>, with guessed letters displayed and blanks for the unguessed.</li>
+<li>The player's <strong>incorrect guesses</strong> to help them keep track of what they have guessed.</li>
+<li>The <strong>gallows</strong>, a representation of how close the player is to losing the game.</li>
+<li>A <strong>message</strong> to instruct the player on what to do.</li>
+</ul>
+<p>As with the Game, we can do this with a Screen object, which will work out the above variables based on a Game object. These will be simple strings - ready to be added into our html.</p>
  
 <pre><code class="language-javascript">
     var Screen = function(game){	
@@ -210,7 +222,7 @@
         return this;
     }    
 </code></pre>
-<p>The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. <strong>getMsg</strong> simply returns a message appropriate to the state of the game, while <strong>getWord</strong> gets the word for display, by splitting it into an array of letters (e.g., <em>'antelope'</em> <strong>-></strong> <em>['a', 'n', 't', 'e', 'l', 'o', 'p', 'e']</em>) and returns an underscore if the letter is not guessed, the letter itself if it is.</p>
+<p>The Screen object is created using a Game object, and the variables are defined by doing some calculations on one or more properties of this object. <code>Screen.getMsg</code> simply returns a message appropriate to the state of the game, while <code>Screen.getWord</code> gets the word for display, by splitting it into an array of letters (e.g., <em>'antelope'</em> <strong>-></strong> ['a', 'n', 't', 'e', 'l', 'o', 'p', 'e']) and <em>maps</em> each element to a function that returns an underscore if the letter is not guessed, the letter itself if it is.</p>
 
 <pre><code class="language-javascript">
     var getWord = function(game){
@@ -222,7 +234,7 @@
     }
 </code></pre>
 
-<p>And that's the Screen object. Handling this will just involve adding the relevant bits of the Screen object into our html. Our drawScreen method will live in and be called from the interface module.</p>
+<p>And that's the Screen object. Handling this will just involve adding the relevant bits of the Screen object into our html. Our trivial <code>drawScreen</code> method will live in and be called from the interface module.</p>
 
 <pre><code class="language-javascript">
     var drawScreen = function(screen){
@@ -233,7 +245,7 @@
     };
 </code></pre>
 
-<p>Remember, this interface module is the 'imperative shell', or management layer of our application. It's worth looking at the core init method from a high-level.</p>
+<p>Remember, this interface module is the 'imperative shell', or management layer of our application.</p>
 
 <pre><code class="language-javascript">
     var init = function(){
@@ -261,9 +273,9 @@
         }
     }
 </code></pre>
-<p>This module is the overall manager of the sub-classes. It instantiates our Game object and passes that be composed as a Screen object, which is then drawn to the page. We then wait for user input and repeat the process until the user wins or is dead.</p>
+<p>This module is the overall manager of the sub-classes. It instantiates our Game object and passes that be composed as a Screen object, which calculates strings that can be added to the page to communicate to the user. We then wait for user input and repeat the process until the user wins or dies.</p>
 
-<p>So that's it for our Hangman game! It's a simple game, but I hope I've shown some of the advantages of this 'Functional Core, Imperative Shell' approach.</p>
+<p>So that's our Hangman game! Our interface classes receives input, composes objects from our functional core classes, and finally produces output. It's a simple game, but I hope I've shown some of the advantages of this 'Functional Core, Imperative Shell' approach.</p>
           </div>
         </div>
       </div>
